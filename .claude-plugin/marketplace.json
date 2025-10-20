@@ -9,12 +9,12 @@
   "plugins": [
     {
       "name": "docker-optimizer",
-      "source": "./docker-optimizer",
+      "source": "./plugins/docker-optimizer",
       "description": "Specialized agents for Dockerfile and Docker Compose generation with production best practices"
     },
     {
       "name": "sqlite-helper",
-      "source": "./sqlite-helper",
+      "source": "./plugins/sqlite-helper",
       "description": "Comprehensive SQLite and SQLAlchemy development assistant with interactive commands and expert agents"
     }
   ]

@@ -1,5 +1,4 @@
 ---
-name: sqlite-migrate
 description: Set up and manage Alembic database migrations for SQLite with SQLAlchemy
 ---
 
@@ -85,7 +84,7 @@ def run_migrations_offline() -> None:
     # url = config.get_main_option("sqlalchemy.url")
     # If using sqlite with relative path:
     url = "sqlite:///./app.db"  # Adjust to your database path
-    
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -103,7 +102,7 @@ def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     # Use your existing engine
     connectable = engine
-    
+
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
@@ -250,7 +249,7 @@ def upgrade() -> None:
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
     )
-    
+
     # Create index
     op.create_index('idx_comments_post', 'comments', ['post_id'])
 ```
@@ -295,12 +294,12 @@ alembic show <revision>           # Show migration details
 SQLite has limited ALTER TABLE support. Always use batch mode:
 
 ```python
-# ✅ CORRECT for SQLite
+# CORRECT for SQLite
 def upgrade() -> None:
     with op.batch_alter_table('users') as batch_op:
         batch_op.add_column(sa.Column('new_field', sa.String(50)))
 
-# ❌ WRONG for SQLite (works in PostgreSQL/MySQL)
+# WRONG for SQLite (works in PostgreSQL/MySQL)
 def upgrade() -> None:
     op.add_column('users', sa.Column('new_field', sa.String(50)))
 ```
@@ -322,17 +321,17 @@ If you enabled foreign keys with PRAGMA, ensure they're maintained:
 # In alembic/env.py
 def run_migrations_online() -> None:
     connectable = engine
-    
+
     with connectable.connect() as connection:
         # Enable foreign keys for SQLite
         connection.execute("PRAGMA foreign_keys=ON")
-        
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             render_as_batch=True,
         )
-        
+
         with context.begin_transaction():
             context.run_migrations()
 ```
@@ -359,15 +358,15 @@ alembic revision --autogenerate -m "Add feature"
 def test_migration():
     # Apply migration
     alembic upgrade head
-    
+
     # Test database state
     with get_db() as db:
         # Verify changes work
         pass
-    
+
     # Rollback
     alembic downgrade -1
-    
+
     # Verify rollback worked
     with get_db() as db:
         pass
@@ -383,22 +382,22 @@ Once a migration is applied to any environment:
 ### 4. Keep Migrations Small
 
 ```bash
-# ✅ GOOD: Small, focused migrations
+# GOOD: Small, focused migrations
 alembic revision --autogenerate -m "Add user email field"
 alembic revision --autogenerate -m "Add user email index"
 
-# ❌ BAD: Large, multi-purpose migration
+# BAD: Large, multi-purpose migration
 # One migration doing too many unrelated changes
 ```
 
 ### 5. Use Descriptive Names
 
 ```bash
-# ✅ GOOD
+# GOOD
 alembic revision -m "Add user email verification fields"
 alembic revision -m "Create posts table with relationships"
 
-# ❌ BAD
+# BAD
 alembic revision -m "Update database"
 alembic revision -m "Changes"
 ```
@@ -416,7 +415,7 @@ def upgrade() -> None:
     # 1. Add column
     with op.batch_alter_table('users') as batch_op:
         batch_op.add_column(sa.Column('status', sa.String(20), nullable=True))
-    
+
     # 2. Populate data
     users_table = table('users',
         column('status', String)
@@ -424,7 +423,7 @@ def upgrade() -> None:
     op.execute(
         users_table.update().values(status='active')
     )
-    
+
     # 3. Make non-nullable
     with op.batch_alter_table('users') as batch_op:
         batch_op.alter_column('status', nullable=False)
@@ -471,17 +470,17 @@ SQLite can't drop columns easily. Solutions:
 def upgrade() -> None:
     # SQLite workaround for dropping columns
     op.rename_table('users', 'users_old')
-    
+
     op.create_table('users',
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('name', sa.String(100)),
         # Don't include the dropped column
     )
-    
+
     op.execute(
         'INSERT INTO users (id, name) SELECT id, name FROM users_old'
     )
-    
+
     op.drop_table('users_old')
 ```
 

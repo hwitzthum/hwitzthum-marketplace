@@ -1,5 +1,4 @@
 ---
-name: sqlite-init
 description: Initialize a new SQLite database project with SQLAlchemy setup and best practices
 ---
 
@@ -72,7 +71,7 @@ def get_db():
     """
     Context manager for database sessions.
     Ensures proper cleanup even if an error occurs.
-    
+
     Usage:
         with get_db() as db:
             db.query(User).all()
@@ -124,11 +123,11 @@ class BaseModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
-    
+
     def __repr__(self):
         """String representation for debugging."""
         return f"<{self.__class__.__name__}(id={self.id})>"
-    
+
     def to_dict(self):
         """Convert model instance to dictionary."""
         return {
@@ -153,14 +152,14 @@ def main():
     print("Initializing database...")
     init_db()
     print("Database initialized successfully!")
-    
+
     # Example usage
     with get_db() as db:
         # Create a new record
         new_user = User(name="Alice", email="alice@example.com")
         db.add(new_user)
         db.commit()
-        
+
         # Query records
         users = db.query(User).all()
         for user in users:
@@ -193,7 +192,7 @@ Explain to the user:
 
 1. **How to run the initialization**: `python main.py` or similar
 2. **Where the database file is created**: Explain the path
-3. **Next steps**: 
+3. **Next steps**:
    - Use `/sqlite-model` to create more models
    - Use `/sqlite-migrate` to set up Alembic for migrations
    - Use `/sqlite-test` to create test fixtures

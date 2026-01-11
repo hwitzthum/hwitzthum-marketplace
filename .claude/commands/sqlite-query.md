@@ -1,5 +1,4 @@
 ---
-name: sqlite-query
 description: Get help with SQLAlchemy queries, optimization, and best practices for SQLite
 ---
 
@@ -50,7 +49,7 @@ with get_db() as db:
 # Filtered records
 with get_db() as db:
     active_users = db.query(User).filter(User.is_active == True).all()
-    
+
 # Multiple conditions (AND)
 with get_db() as db:
     users = db.query(User).filter(
@@ -70,23 +69,23 @@ with get_db() as db:
 
 **Eager Loading vs Lazy Loading**
 
-⚠️ **AVOID N+1 QUERIES** - The most common performance issue!
+**AVOID N+1 QUERIES** - The most common performance issue!
 
 ```python
-# ❌ BAD: N+1 query problem
+# BAD: N+1 query problem
 with get_db() as db:
     users = db.query(User).all()
     for user in users:
         print(user.posts)  # Each iteration triggers a new query!
 
-# ✅ GOOD: Eager loading with joinedload
+# GOOD: Eager loading with joinedload
 from sqlalchemy.orm import joinedload
 with get_db() as db:
     users = db.query(User).options(joinedload(User.posts)).all()
     for user in users:
         print(user.posts)  # No additional queries!
 
-# ✅ GOOD: Eager loading with selectinload (better for one-to-many)
+# GOOD: Eager loading with selectinload (better for one-to-many)
 from sqlalchemy.orm import selectinload
 with get_db() as db:
     users = db.query(User).options(selectinload(User.posts)).all()
@@ -222,27 +221,27 @@ with get_db() as db:
 def get_paginated_users(db, page=1, per_page=20):
     """
     Get paginated users.
-    
+
     Args:
         db: Database session
         page: Page number (1-indexed)
         per_page: Items per page
-    
+
     Returns:
         tuple: (items, total_count, total_pages)
     """
     query = db.query(User).filter(User.is_active == True)
-    
+
     # Get total count
     total = query.count()
-    
+
     # Calculate pagination
     total_pages = (total + per_page - 1) // per_page
     offset = (page - 1) * per_page
-    
+
     # Get page items
     items = query.order_by(User.created_at.desc()).offset(offset).limit(per_page).all()
-    
+
     return items, total, total_pages
 
 # Usage
@@ -257,13 +256,13 @@ with get_db() as db:
 with get_db() as db:
     # Returns tuples
     results = db.query(User.id, User.name).all()
-    
+
     # With labels
     results = db.query(
         User.id.label("user_id"),
         User.name.label("user_name")
     ).all()
-    
+
     # Convert to dict
     results = [
         {"user_id": r.user_id, "user_name": r.user_name}
@@ -282,7 +281,7 @@ with get_db() as db:
     post_count = db.query(
         func.count(Post.id)
     ).filter(Post.author_id == User.id).correlate(User).scalar_subquery()
-    
+
     users = db.query(User, post_count.label("post_count")).all()
 
 # Exists
@@ -342,20 +341,20 @@ Always use eager loading when accessing relationships in loops.
 
 ### 3. Select Only What You Need
 ```python
-# ❌ BAD: Loading full objects when you only need IDs
+# BAD: Loading full objects when you only need IDs
 user_ids = [user.id for user in db.query(User).all()]
 
-# ✅ GOOD: Select only IDs
+# GOOD: Select only IDs
 user_ids = [id for (id,) in db.query(User.id).all()]
 ```
 
 ### 4. Use exists() for Checks
 ```python
-# ❌ BAD: Loading data just to check existence
+# BAD: Loading data just to check existence
 if db.query(User).filter(User.email == "alice@example.com").first():
     ...
 
-# ✅ GOOD: Use exists
+# GOOD: Use exists
 from sqlalchemy import exists
 if db.query(exists().where(User.email == "alice@example.com")).scalar():
     ...
@@ -363,13 +362,13 @@ if db.query(exists().where(User.email == "alice@example.com")).scalar():
 
 ### 5. Batch Operations
 ```python
-# ❌ BAD: Multiple commits
+# BAD: Multiple commits
 for data in large_dataset:
     user = User(**data)
     db.add(user)
     db.commit()  # Slow!
 
-# ✅ GOOD: Batch insert
+# GOOD: Batch insert
 users = [User(**data) for data in large_dataset]
 db.bulk_save_objects(users)
 db.commit()
@@ -388,12 +387,12 @@ Never load all records from a large table at once.
 
 2. **Not using context managers**:
    ```python
-   # ❌ BAD
+   # BAD
    db = SessionLocal()
    users = db.query(User).all()
    # Missing: db.close()
-   
-   # ✅ GOOD
+
+   # GOOD
    with get_db() as db:
        users = db.query(User).all()
    ```
@@ -417,10 +416,10 @@ Never load all records from a large table at once.
 
 5. **Using == None instead of is_(None)**:
    ```python
-   # ❌ BAD
+   # BAD
    query.filter(User.deleted_at == None)
-   
-   # ✅ GOOD
+
+   # GOOD
    query.filter(User.deleted_at.is_(None))
    ```
 
@@ -429,11 +428,11 @@ Never load all records from a large table at once.
 **SQLAlchemy protects you automatically with parameterized queries!**
 
 ```python
-# ✅ SAFE: Parameterized (SQLAlchemy handles this)
+# SAFE: Parameterized (SQLAlchemy handles this)
 email = user_input
 user = db.query(User).filter(User.email == email).first()
 
-# ❌ NEVER DO THIS: String concatenation
+# NEVER DO THIS: String concatenation
 # email = user_input
 # query = f"SELECT * FROM users WHERE email = '{email}'"  # SQL injection!
 ```

@@ -1,5 +1,4 @@
 ---
-name: sqlite-model
 description: Create SQLAlchemy models with proper relationships, constraints, and best practices for SQLite
 ---
 
@@ -42,14 +41,14 @@ from models.base import BaseModel  # Adjust import based on project structure
 class [ModelName](BaseModel):
     """
     [Brief description of what this model represents]
-    
+
     Attributes:
         field1: Description of field1
         field2: Description of field2
         ...
     """
     __tablename__ = "[table_name]"
-    
+
     # Column definitions
     name = Column(String(255), nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -57,30 +56,30 @@ class [ModelName](BaseModel):
     is_active = Column(Boolean, default=True, nullable=False)
     description = Column(Text)
     created_by_id = Column(Integer, ForeignKey("users.id"))
-    
+
     # Relationships
     created_by = relationship("User", back_populates="created_items")
     items = relationship("Item", back_populates="owner", cascade="all, delete-orphan")
-    
+
     # Indexes (define multi-column indexes if needed)
     __table_args__ = (
         Index('idx_name_email', 'name', 'email'),
         Index('idx_active_created', 'is_active', 'created_at'),
     )
-    
+
     def __repr__(self):
         return f"<{self.__class__.__name__}(id={self.id}, name='{self.name}')>"
-    
+
     def __str__(self):
         return self.name
-    
+
     @validates('email')
     def validate_email(self, key, email):
         """Validate email format."""
         if '@' not in email:
             raise ValueError("Invalid email address")
         return email.lower()
-    
+
     @validates('age')
     def validate_age(self, key, age):
         """Validate age is reasonable."""
@@ -249,7 +248,7 @@ with get_db() as db:
 3. **Suggest next steps**:
    - Use `/sqlite-query` for help with complex queries
    - Use `/sqlite-test` to create test fixtures
-   - Use the `sqlite-architect` agent for schema discussions
+   - Use `/sqlite-architect` for schema discussions
 
 ## Common Pitfalls to Avoid
 

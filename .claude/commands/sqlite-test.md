@@ -1,5 +1,4 @@
 ---
-name: sqlite-test
 description: Generate test fixtures, test database setup, and testing utilities for SQLite with SQLAlchemy
 ---
 
@@ -47,7 +46,7 @@ def test_db():
         TEST_DATABASE_URL,
         connect_args={"check_same_thread": False}
     )
-    
+
     # Enable foreign keys
     from sqlalchemy import event
     @event.listens_for(engine, "connect")
@@ -55,14 +54,14 @@ def test_db():
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-    
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
-    
+
     # Create session
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
-    
+
     try:
         yield db
     finally:
@@ -96,10 +95,10 @@ def test_db():
     """
     # Create temporary file
     db_fd, db_path = tempfile.mkstemp(suffix='.db')
-    
+
     # Create engine
     engine = create_engine(f'sqlite:///{db_path}')
-    
+
     # Enable foreign keys
     from sqlalchemy import event
     @event.listens_for(engine, "connect")
@@ -107,14 +106,14 @@ def test_db():
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-    
+
     # Create tables
     Base.metadata.create_all(bind=engine)
-    
+
     # Create session
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
-    
+
     try:
         yield db
     finally:
@@ -141,9 +140,9 @@ def test_engine():
     # Remove old test database if exists
     if os.path.exists(TEST_DATABASE_PATH):
         os.remove(TEST_DATABASE_PATH)
-    
+
     engine = create_engine(f'sqlite:///{TEST_DATABASE_PATH}')
-    
+
     # Enable foreign keys
     from sqlalchemy import event
     @event.listens_for(engine, "connect")
@@ -151,10 +150,10 @@ def test_engine():
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
-    
+
     Base.metadata.create_all(bind=engine)
     yield engine
-    
+
     # Cleanup
     if os.path.exists(TEST_DATABASE_PATH):
         os.remove(TEST_DATABASE_PATH)
@@ -168,10 +167,10 @@ def test_db(test_engine):
     """
     connection = test_engine.connect()
     transaction = connection.begin()
-    
+
     TestingSessionLocal = sessionmaker(bind=connection)
     db = TestingSessionLocal()
-    
+
     try:
         yield db
     finally:
@@ -194,11 +193,11 @@ import string
 def create_user(db, **kwargs):
     """
     Create a test user with default values.
-    
+
     Args:
         db: Database session
         **kwargs: Override default values
-    
+
     Returns:
         User: Created user instance
     """
@@ -209,7 +208,7 @@ def create_user(db, **kwargs):
         "age": 25,
     }
     defaults.update(kwargs)
-    
+
     user = User(**defaults)
     db.add(user)
     db.commit()
@@ -220,18 +219,18 @@ def create_user(db, **kwargs):
 def create_post(db, author=None, **kwargs):
     """
     Create a test post.
-    
+
     Args:
         db: Database session
         author: User instance (creates one if None)
         **kwargs: Override default values
-    
+
     Returns:
         Post: Created post instance
     """
     if author is None:
         author = create_user(db)
-    
+
     defaults = {
         "title": "Test Post",
         "content": "This is test content",
@@ -239,7 +238,7 @@ def create_post(db, author=None, **kwargs):
         "published": True,
     }
     defaults.update(kwargs)
-    
+
     post = Post(**defaults)
     db.add(post)
     db.commit()
@@ -253,14 +252,14 @@ def create_comment(db, post=None, author=None, **kwargs):
         post = create_post(db, author=author)
     if author is None:
         author = create_user(db)
-    
+
     defaults = {
         "content": "Test comment",
         "post_id": post.id,
         "author_id": author.id,
     }
     defaults.update(kwargs)
-    
+
     comment = Comment(**defaults)
     db.add(comment)
     db.commit()
@@ -296,7 +295,7 @@ def create_realistic_user(db, **kwargs):
         "is_active": True,
     }
     defaults.update(kwargs)
-    
+
     user = User(**defaults)
     db.add(user)
     db.commit()
@@ -308,7 +307,7 @@ def create_realistic_post(db, author=None, **kwargs):
     """Create a post with realistic fake data."""
     if author is None:
         author = create_realistic_user(db)
-    
+
     defaults = {
         "title": fake.sentence(),
         "content": fake.text(500),
@@ -316,7 +315,7 @@ def create_realistic_post(db, author=None, **kwargs):
         "published": random.choice([True, False]),
     }
     defaults.update(kwargs)
-    
+
     post = Post(**defaults)
     db.add(post)
     db.commit()
@@ -337,7 +336,7 @@ from tests.factories import create_user
 def test_user_creation(test_db):
     """Test creating a user."""
     user = create_user(test_db, name="Alice", email="alice@example.com")
-    
+
     assert user.id is not None
     assert user.name == "Alice"
     assert user.email == "alice@example.com"
@@ -361,11 +360,11 @@ def test_user_email_validation(test_db):
 def test_user_relationships(test_db):
     """Test user-post relationship."""
     from tests.factories import create_post
-    
+
     user = create_user(test_db)
     post1 = create_post(test_db, author=user)
     post2 = create_post(test_db, author=user)
-    
+
     assert len(user.posts) == 2
     assert post1 in user.posts
     assert post2 in user.posts
@@ -375,14 +374,14 @@ def test_cascade_delete(test_db):
     """Test that deleting user deletes their posts."""
     from tests.factories import create_post
     from models import Post
-    
+
     user = create_user(test_db)
     post = create_post(test_db, author=user)
     post_id = post.id
-    
+
     test_db.delete(user)
     test_db.commit()
-    
+
     # Post should be deleted due to cascade
     assert test_db.query(Post).filter(Post.id == post_id).first() is None
 ```
@@ -399,9 +398,9 @@ def test_filter_by_active_status(test_db):
     """Test filtering users by active status."""
     active_user = create_user(test_db, is_active=True)
     inactive_user = create_user(test_db, is_active=False)
-    
+
     active_users = test_db.query(User).filter(User.is_active == True).all()
-    
+
     assert active_user in active_users
     assert inactive_user not in active_users
 
@@ -411,7 +410,7 @@ def test_query_with_relationship(test_db):
     user = create_user(test_db)
     create_post(test_db, author=user, title="Post 1")
     create_post(test_db, author=user, title="Post 2")
-    
+
     # Query posts for user
     posts = test_db.query(Post).filter(Post.author_id == user.id).all()
     assert len(posts) == 2
@@ -420,10 +419,10 @@ def test_query_with_relationship(test_db):
 def test_pagination(test_db):
     """Test query pagination."""
     create_users(test_db, count=25)
-    
+
     page_1 = test_db.query(User).limit(10).offset(0).all()
     page_2 = test_db.query(User).limit(10).offset(10).all()
-    
+
     assert len(page_1) == 10
     assert len(page_2) == 10
     assert page_1[0].id != page_2[0].id
@@ -434,9 +433,9 @@ def test_ordering(test_db):
     create_user(test_db, name="Zoe")
     create_user(test_db, name="Alice")
     create_user(test_db, name="Bob")
-    
+
     users = test_db.query(User).order_by(User.name).all()
-    
+
     assert users[0].name == "Alice"
     assert users[1].name == "Bob"
     assert users[2].name == "Zoe"
@@ -453,11 +452,11 @@ from tests.factories import create_user
 def test_user_activation(test_db):
     """Test user activation logic."""
     user = create_user(test_db, is_active=False)
-    
+
     # Activate user
     user.is_active = True
     test_db.commit()
-    
+
     # Verify
     refreshed_user = test_db.query(User).filter(User.id == user.id).first()
     assert refreshed_user.is_active is True
@@ -466,13 +465,13 @@ def test_user_activation(test_db):
 def test_unique_email_constraint(test_db):
     """Test that emails must be unique."""
     from sqlalchemy.exc import IntegrityError
-    
+
     create_user(test_db, email="duplicate@example.com")
-    
+
     with pytest.raises(IntegrityError):
         create_user(test_db, email="duplicate@example.com")
         test_db.commit()
-    
+
     test_db.rollback()  # Clean up failed transaction
 ```
 
@@ -547,7 +546,7 @@ pytest -s
 # .coveragerc or pyproject.toml [tool.coverage.run]
 [coverage:run]
 source = .
-omit = 
+omit =
     tests/*
     venv/*
     */migrations/*
@@ -572,10 +571,10 @@ Each test should:
 ### 2. Use Factories
 
 ```python
-# ✅ GOOD: Flexible factory
+# GOOD: Flexible factory
 user = create_user(db, age=30)  # Override specific fields
 
-# ❌ BAD: Hardcoded values everywhere
+# BAD: Hardcoded values everywhere
 user = User(name="Test", email="test@example.com", age=25, is_active=True)
 ```
 
@@ -587,11 +586,11 @@ def test_user_age_validation(test_db):
     # Test negative age
     with pytest.raises(ValueError):
         create_user(test_db, age=-1)
-    
+
     # Test zero age
     user = create_user(test_db, age=0)
     assert user.age == 0
-    
+
     # Test very old age
     with pytest.raises(ValueError):
         create_user(test_db, age=200)
@@ -604,11 +603,11 @@ def test_orphan_deletion(test_db):
     """Test that orphaned records are deleted."""
     user = create_user(test_db)
     post = create_post(test_db, author=user)
-    
+
     # Remove post from user's collection
     user.posts.remove(post)
     test_db.commit()
-    
+
     # Post should be deleted (if cascade includes delete-orphan)
     from models import Post
     assert test_db.query(Post).filter(Post.id == post.id).first() is None
@@ -645,9 +644,9 @@ def setup_test_data(test_db):
     # Setup
     users = create_users(test_db, count=5)
     posts = [create_post(test_db, author=user) for user in users]
-    
+
     yield {"users": users, "posts": posts}
-    
+
     # Teardown (if needed, usually automatic with in-memory DB)
     # Clean up code here
 ```
@@ -663,7 +662,7 @@ def test_with_mocked_email(test_db):
         user = create_user(test_db)
         # Function that would send email
         send_welcome_email(user)
-        
+
         # Verify email was "sent"
         mock_send.assert_called_once_with(user.email, "Welcome!")
 ```

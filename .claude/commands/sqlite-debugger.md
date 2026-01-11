@@ -1,5 +1,4 @@
 ---
-name: sqlite-debugger
 description: Expert at diagnosing and fixing SQLite and SQLAlchemy errors, performance issues, and data problems
 ---
 
@@ -169,7 +168,7 @@ with get_db() as db:
     user = User(email="bad-email")  # Fails validation
     db.add(user)
     db.commit()  # Error occurs
-    
+
     # Try to continue...
     users = db.query(User).all()  # This fails!
 ```
@@ -184,7 +183,7 @@ with get_db() as db:
     except Exception as e:
         db.rollback()  # Roll back the failed transaction
         print(f"Error: {e}")
-    
+
     # Now you can continue
     users = db.query(User).all()
 ```
@@ -238,11 +237,11 @@ def set_sqlite_pragma(dbapi_conn, connection_record):
 
 **Ensure sessions are closed:**
 ```python
-# ✅ GOOD: Auto-closes
+# GOOD: Auto-closes
 with get_db() as db:
     db.query(User).all()
 
-# ❌ BAD: Might not close
+# BAD: Might not close
 db = SessionLocal()
 db.query(User).all()
 # Missing db.close()!
@@ -368,7 +367,7 @@ print(db.execute(text(f'EXPLAIN QUERY PLAN {query}')).fetchall())
 # You should see 'USING INDEX' instead of 'SCAN TABLE'
 ```
 
-**Expected improvement:** 100x faster on large tables (O(n) → O(log n))"
+**Expected improvement:** 100x faster on large tables (O(n) -> O(log n))"
 
 ### N+1 Query Problem
 
@@ -507,7 +506,7 @@ with get_db() as db:
     user = User(name="Alice")
     db.add(user)
     db.commit()
-    
+
     # Verify in same session
     found = db.query(User).filter(User.name == "Alice").first()
     print(f"Found in same session: {found}")
